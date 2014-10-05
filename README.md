@@ -1,7 +1,7 @@
-SmartCup
+Goldilocks
 ========
 
-We made a cup that tells you when your coffee will be at a comfortable drinking temperature. 
+We made a cup that tells you when your coffee will be at just the right temperature. 
 
 An arduino measures the temperature of the liquid in the cup and sends it to an Android app wirelessly via bluetooth. 
 
