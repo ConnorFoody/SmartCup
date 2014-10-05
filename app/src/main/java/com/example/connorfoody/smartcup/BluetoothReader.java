@@ -87,6 +87,7 @@ public class BluetoothReader extends Thread {
         String o_str = "";
         int count = 0;
         String raw  = "";
+        System.out.println("ENTERING");
         while(true){
             try{
                 if(bt_is.available() <= 2){
@@ -133,7 +134,7 @@ public class BluetoothReader extends Thread {
                         m_handler.sendMessage(msg);
                     }
                     else if(state == TemperatureProcessor.max){
-                        msg = m_handler.obtainMessage(1, new SCMessage(state, m_processor.getTemperature(), 0.0));
+                        msg = m_handler.obtainMessage(1, new SCMessage(state, m_processor.getTemperature(), m_processor.predict()));
                         m_handler.sendMessage(msg);
                     }
                     else {
