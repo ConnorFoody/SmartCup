@@ -49,9 +49,10 @@ public class TemperatureProcessor {
         }
 
         public double predict(){
-            if(temperatureFiltered > 118 ) {
-                initialTime = (-.0771 - Math.sqrt(Math.pow(.0771, 2))) - (4 * .00002656 * (173.3- temperatureFiltered)) / (2 * .00002656);
-                finalTime = (-.0771 - Math.sqrt(Math.pow(.0771, 2))) - (4 * .00002656 * (173.3- 136)) / (2 * .00002656);
+            if(temperatureFiltered > 136.5 ) {
+                // need to keep above 118 to keep the root real
+                initialTime = (.0771 + Math.sqrt(Math.pow(.0771, 2) - (4 * .00002656 * (173.3- temperatureFiltered))) ) / (2 * .00002656);
+                finalTime = (.0771 + Math.sqrt(Math.pow(.0771, 2) - (4 * .00002656 * (173.3- 136))) ) / (2 * .00002656);
                 return initialTime - finalTime;
 
             }else{

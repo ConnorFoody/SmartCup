@@ -114,7 +114,9 @@ public class BluetoothReader extends Thread {
 
                     int state = m_processor.Update(temp);
                     if(state == TemperatureProcessor.decreasing){
-                        msg = m_handler.obtainMessage(1, "state: decreasing\ntemp: " + m_processor.getTemperature());
+                        String tmp = "state: decreasing\ntemp: " + m_processor.getTemperature();
+                        tmp += "\npredicted time: " + m_processor.predict();
+                        msg = m_handler.obtainMessage(1, tmp);
                         m_handler.sendMessage(msg);
                     }
                     else  if(state == TemperatureProcessor.increasing){
