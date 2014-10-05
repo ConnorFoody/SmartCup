@@ -6,8 +6,9 @@ package com.example.connorfoody.smartcup;
 public class TemperatureProcessor {
 
         public static final int increasing = 1;
-         public static final int peak = 0;
+        public static final int peak = 0;
         public static final int decreasing = -1;
+        public static final int resting = 2;
         public int state;
 
 
@@ -25,24 +26,26 @@ public class TemperatureProcessor {
         {
             temperatureFiltered = 0;
             slopeFiltered = 0;
+            state = resting;
             //constructor
 
         }
 
-        public TemperatureProcessor(double unfilteredTemp) {
+        public int Update(double unfilteredTemp) {
             oldFiltered = temperatureFiltered;
             temperatureFiltered = (unfilteredTemp * FILTER_T) + ((1 - FILTER_T) * (temperatureFiltered));
 
-            slope = (oldFiltered - temperatureFiltered) / .5;
+            slope = (temperatureFiltered - oldFiltered) / .5;
             slopeFiltered = (slope * FILTER_S) + ((1 - FILTER_S) * (slopeFiltered));
 
-            if (slopeFiltered > 2) { //pick a better value
+            if (slopeFiltered >= 0.5) { //pick a better value
                 state = increasing;
-            } else if (slopeFiltered < 2 && slopeFiltered > -2 && state == increasing) {
+            } else if (slopeFiltered < 0.50 && slopeFiltered > -.005 && state == increasing) {
                 state = peak;
-            } else if (slopeFiltered < -2 && state == peak) {
+            } else if (slopeFiltered <= -0.005 && state == peak) {
                 state = decreasing;
             }
+            return state;
         }
 
         public double predict(){
@@ -57,10 +60,7 @@ public class TemperatureProcessor {
         }
 
 
-        public static void main(String[] args)
-        {
-
-
-
+        public double getTemperature(){
+            return temperatureFiltered;
         }
 }

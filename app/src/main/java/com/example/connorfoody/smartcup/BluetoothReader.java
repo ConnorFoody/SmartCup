@@ -13,6 +13,8 @@ import java.util.UUID;
  * Created by connorfoody on 10/3/14.
  */
 public class BluetoothReader extends Thread {
+
+    private TemperatureProcessor m_processor = null;
     private Handler m_handler = null;
     private BluetoothAdapter m_adapter = null;
     private BluetoothSocket m_socket = null;
@@ -26,6 +28,7 @@ public class BluetoothReader extends Thread {
         m_adapter = BluetoothAdapter.getDefaultAdapter();
         m_address = address;
         m_UUID = id;
+        m_processor = new TemperatureProcessor();
     }
 
     public void run(){
@@ -85,52 +88,66 @@ public class BluetoothReader extends Thread {
         int bytes = 0;
         String o_str = "";
         int count = 0;
+        String raw  = "";
         while(true){
             try{
-                if(bt_is.available() <= 3){
+                if(bt_is.available() <= 2){
                     continue;
                 }
                 System.out.println("in");
                 count++;
-                byte[] buffer = new byte[3];
+                byte[] buffer = new byte[4];
                 bytes = bt_is.read(buffer);
                 o_str += new String(buffer, "US-ASCII");
 
                 if(o_str.contains("!") == true){
+                    raw = o_str;
                     o_str = o_str.replace("!", " ");
-                    if(count != 3){
-                    }
                     o_str.trim();
+
                     for(int i = 0; i < 4; i++){
                         System.out.print("" + o_str.charAt(i) + " ");
                     }
                     System.out.println();
                     System.out.println("temperature" + o_str);
                     double temp = Double.valueOf(o_str);
-                    temp *= 2.0;
-                    if(temp > 164 && temp < 190){
-                        msg = m_handler.obtainMessage(1, "happy temp: " + temp);
+
+                    int state = m_processor.Update(temp);
+                    if(state == TemperatureProcessor.decreasing){
+                        msg = m_handler.obtainMessage(1, "state: decreasing\ntemp: " + m_processor.getTemperature());
+                        m_handler.sendMessage(msg);
+                    }
+                    else  if(state == TemperatureProcessor.increasing){
+                        msg = m_handler.obtainMessage(1, "state: increasing\ntemp: " + m_processor.getTemperature());
+                        m_handler.sendMessage(msg);
+                    }
+                    else if(state == TemperatureProcessor.peak){
+                        msg = m_handler.obtainMessage(1, "state: peak\ntemp: " + m_processor.getTemperature());
+                        m_handler.sendMessage(msg);
+                    }
+                    else if(state == TemperatureProcessor.resting){
+                        msg = m_handler.obtainMessage(1, "state: rest\ntemp: " + m_processor.getTemperature());
+                        m_handler.sendMessage(msg);
+                    }
+                    else {
+                        msg = m_handler.obtainMessage(-1, "fell through on state");
                         m_handler.sendMessage(msg);
                         break;
                     }
-                    else {
-                        msg = m_handler.obtainMessage(1, "msg: " + temp + " degrees");
-
-                        m_handler.sendMessage(msg);
-                    }
                     count = 0;
-
                     o_str = "";
+
                     if(!o_str.isEmpty()){
                         msg = m_handler.obtainMessage(-1, "message failed to empty");
                         m_handler.sendMessage(msg);
                         break;
                     }
                 }
+                raw = "";
             }
             catch(Exception e){
                 e.printStackTrace();
-                msg = m_handler.obtainMessage(-1, "reading/thread: |" + o_str + "|");
+                msg = m_handler.obtainMessage(-1, "reading/thread: |" + raw + "|");
                 m_handler.sendMessage(msg);
                 break;
             }
