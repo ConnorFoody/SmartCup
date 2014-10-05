@@ -1,6 +1,7 @@
 package com.example.connorfoody.smartcup;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,13 +10,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.LinearLayout;
+import android.app.Notification.*;
+import android.app.Notification;
+import android.app.NotificationManager;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphViewSeries;
 import com.jjoe64.graphview.GraphViewStyle;
 import com.jjoe64.graphview.LineGraphView;
-import com.jjoe64.graphview.CustomLabelFormatter;
 
 import java.util.UUID;
 
@@ -61,13 +64,21 @@ public class MainBasic extends Activity {
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.graph);
         layout.addView(graph);
+
+        m_notification = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentTitle("My notification")
+                .setContentText("Hello World!").build();
+        m_notification_manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
     }
     private GraphViewSeries predict_series;
     private GraphViewSeries data_series;
     private GraphViewSeries goal_series;
     private GraphView graph;
     private int times_read;
-
+    Notification m_notification;
+    NotificationManager m_notification_manager;
     // simple handler to help with debugging
     public Handler debug_handler = new Handler(){
         @Override
@@ -94,7 +105,9 @@ public class MainBasic extends Activity {
 
                 }
                 else if(m_msg.state == TemperatureProcessor.decreasing){
-
+                }
+                if(times_read == 50){
+                    m_notification_manager.notify(1, m_notification);
                 }
                 data_series.appendData(new GraphViewData((double)times_read * 0.5, (double)Math.round(m_msg.temp * 10.0) / 10.0 ), true, 100);
                 goal_series.appendData(new GraphViewData((double)times_read * 0.5, 136), true, 100);
