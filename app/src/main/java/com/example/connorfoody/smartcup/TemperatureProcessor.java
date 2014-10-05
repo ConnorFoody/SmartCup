@@ -9,6 +9,7 @@ public class TemperatureProcessor {
         public static final int peak = 0;
         public static final int decreasing = -1;
         public static final int resting = 2;
+        public static final int max = 3;
         public int state;
 
 
@@ -43,6 +44,9 @@ public class TemperatureProcessor {
             } else if (slopeFiltered < 0.50 && slopeFiltered > -.005 && state == increasing) {
                 state = peak;
             } else if (slopeFiltered <= -0.005 && state == peak) {
+                state = max;
+            }
+            else if(slopeFiltered <= -0.005 && state == max){
                 state = decreasing;
             }
             return state;

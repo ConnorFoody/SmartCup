@@ -36,7 +36,7 @@ public class BluetoothReader extends Thread {
         if(m_adapter == null){
             // need to throw some kind of error for this
         }
-        test();
+        //test();
         check_state();
         if(!bt_OK){ // if bluetooth is not enabled, go ahead and break
             return;
@@ -61,7 +61,6 @@ public class BluetoothReader extends Thread {
         // establish connection
         try{
             m_socket.connect();
-
         }
         catch(Exception e){
             try{
@@ -84,7 +83,6 @@ public class BluetoothReader extends Thread {
         }
 
         // setup buff reading
-
         int bytes = 0;
         String o_str = "";
         int count = 0;
@@ -94,7 +92,6 @@ public class BluetoothReader extends Thread {
                 if(bt_is.available() <= 2){
                     continue;
                 }
-                System.out.println("in");
                 count++;
                 byte[] buffer = new byte[4];
                 bytes = bt_is.read(buffer);
@@ -106,29 +103,37 @@ public class BluetoothReader extends Thread {
                     o_str.trim();
 
                     for(int i = 0; i < 4; i++){
-                        System.out.print("" + o_str.charAt(i) + " ");
+                        //System.out.print("" + o_str.charAt(i) + " ");
                     }
-                    System.out.println();
-                    System.out.println("temperature" + o_str);
+                    //System.out.println();
+                    //System.out.println("temperature" + o_str);
                     double temp = Double.valueOf(o_str);
 
                     int state = m_processor.Update(temp);
                     if(state == TemperatureProcessor.decreasing){
-                        String tmp = "state: decreasing\ntemp: " + m_processor.getTemperature();
-                        tmp += "\npredicted time: " + m_processor.predict();
-                        msg = m_handler.obtainMessage(1, tmp);
+                        //String tmp = "state: decreasing\ntemp: " + m_processor.getTemperature();
+                        //tmp += "\npredicted time: " + m_processor.predict();
+                        //msg = m_handler.obtainMessage(1, tmp);
+                        msg = m_handler.obtainMessage(1, new SCMessage(state, m_processor.getTemperature(), m_processor.predict()));
                         m_handler.sendMessage(msg);
                     }
                     else  if(state == TemperatureProcessor.increasing){
-                        msg = m_handler.obtainMessage(1, "state: increasing\ntemp: " + m_processor.getTemperature());
+                        //msg = m_handler.obtainMessage(1, "state: increasing\ntemp: " + m_processor.getTemperature());
+                        msg = m_handler.obtainMessage(1, new SCMessage(state, m_processor.getTemperature(), 0.0));
                         m_handler.sendMessage(msg);
                     }
                     else if(state == TemperatureProcessor.peak){
-                        msg = m_handler.obtainMessage(1, "state: peak\ntemp: " + m_processor.getTemperature());
+                        //msg = m_handler.obtainMessage(1, "state: peak\ntemp: " + m_processor.getTemperature());
+                        msg = m_handler.obtainMessage(1, new SCMessage(state, m_processor.getTemperature(), 0.0));
                         m_handler.sendMessage(msg);
                     }
                     else if(state == TemperatureProcessor.resting){
-                        msg = m_handler.obtainMessage(1, "state: rest\ntemp: " + m_processor.getTemperature());
+                        //msg = m_handler.obtainMessage(1, "state: rest\ntemp: " + m_processor.getTemperature());
+                        msg = m_handler.obtainMessage(1, new SCMessage(state, m_processor.getTemperature(), 0.0));
+                        m_handler.sendMessage(msg);
+                    }
+                    else if(state == TemperatureProcessor.max){
+                        msg = m_handler.obtainMessage(1, new SCMessage(state, m_processor.getTemperature(), 0.0));
                         m_handler.sendMessage(msg);
                     }
                     else {
@@ -136,6 +141,8 @@ public class BluetoothReader extends Thread {
                         m_handler.sendMessage(msg);
                         break;
                     }
+
+                    // zero out counters
                     count = 0;
                     o_str = "";
 
@@ -167,8 +174,9 @@ public class BluetoothReader extends Thread {
         }
         else{
             if(m_adapter.isEnabled()){
-                Message msg = m_handler.obtainMessage(1, "bluetooth enabled");
-                m_handler.sendMessage(msg);
+                //Message msg = m_handler.obtainMessage(1, "bluetooth enabled");
+                //m_handler.sendMessage(msg);
+                System.out.println("bluetooth enabled");
                 bt_OK = true;
             }
             else{

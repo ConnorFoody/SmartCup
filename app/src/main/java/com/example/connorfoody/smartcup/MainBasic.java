@@ -23,16 +23,16 @@ public class MainBasic extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_basic);
-        BluetoothReader m_reader = new BluetoothReader(handler,"20:14:04:18:23:59", UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
+        BluetoothReader m_reader = new BluetoothReader(debug_handler,"20:14:04:18:23:59", UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
         m_reader.start();
     }
 
-    public Handler handler = new Handler(){
+    public Handler debug_handler = new Handler(){
         @Override
         public void handleMessage(Message msg){
             TextView text = (TextView) findViewById(R.id.output);
             if(msg.what == 1){
-                text.setText( "\n" + msg.obj);
+                text.setText( "\n" + ((SCMessage)msg.obj).temp);
             }
             else if(msg.what == -1){
                 text.append("\nERROR: " + msg.obj + "\n");
