@@ -1,13 +1,8 @@
-package com.example.connorfoody.smartcup;
 
-/**
- * Created by connorfoody on 10/4/14.
- */
-
+package  com.example.connorfoody.smartcup;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
 
@@ -41,8 +36,6 @@ public class BluetoothReader extends Thread {
         test();
         check_state();
         if(!bt_OK){ // if bluetooth is not enabled, go ahead and break
-            msg = m_handler.obtainMessage(-1, "bluetooth not enabled");
-            m_handler.sendMessage(msg);
             return;
         }
 
@@ -55,7 +48,7 @@ public class BluetoothReader extends Thread {
         }
         catch(Exception e){
             e.printStackTrace();
-            msg = m_handler.obtainMessage(-1, "could not build the bluetooth socket");
+            msg = m_handler.obtainMessage(-1, "could not build the socket");
             m_handler.sendMessage(msg);
         }
 
@@ -74,10 +67,7 @@ public class BluetoothReader extends Thread {
             }
             catch (Exception ee){
                 ee.printStackTrace();
-                msg = m_handler.obtainMessage(-1, "trouble opening and closing the bluetooth socket");
-                m_handler.sendMessage(msg);
             }
-            msg = m_handler.obtainMessage(-1, "trouble with opening the bluetooth socket");
             e.printStackTrace();
         }
 
@@ -93,18 +83,54 @@ public class BluetoothReader extends Thread {
         // setup buff reading
 
         int bytes = 0;
+        String o_str = "";
+        int count = 0;
         while(true){
             try{
-                byte[] buffer = new byte[1024];
+                if(bt_is.available() <= 3){
+                    continue;
+                }
+                System.out.println("in");
+                count++;
+                byte[] buffer = new byte[3];
                 bytes = bt_is.read(buffer);
-                String o_str = new String(buffer);
-                msg = m_handler.obtainMessage(1, "msg: " + o_str);
-                m_handler.sendMessage(msg);
+                o_str += new String(buffer, "US-ASCII");
 
+                if(o_str.contains("!") == true){
+                    o_str = o_str.replace("!", " ");
+                    if(count != 3){
+                    }
+                    o_str.trim();
+                    for(int i = 0; i < 4; i++){
+                        System.out.print("" + o_str.charAt(i) + " ");
+                    }
+                    System.out.println();
+                    System.out.println("temperature" + o_str);
+                    double temp = Double.valueOf(o_str);
+                    temp *= 2.0;
+                    if(temp > 164 && temp < 190){
+                        msg = m_handler.obtainMessage(1, "happy temp: " + temp);
+                        m_handler.sendMessage(msg);
+                        break;
+                    }
+                    else {
+                        msg = m_handler.obtainMessage(1, "msg: " + temp + " degrees");
+
+                        m_handler.sendMessage(msg);
+                    }
+                    count = 0;
+
+                    o_str = "";
+                    if(!o_str.isEmpty()){
+                        msg = m_handler.obtainMessage(-1, "message failed to empty");
+                        m_handler.sendMessage(msg);
+                        break;
+                    }
+                }
             }
             catch(Exception e){
                 e.printStackTrace();
-                msg = m_handler.obtainMessage(-1, "reading/thread");
+                msg = m_handler.obtainMessage(-1, "reading/thread: |" + o_str + "|");
                 m_handler.sendMessage(msg);
                 break;
             }
