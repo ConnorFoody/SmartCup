@@ -15,6 +15,7 @@ import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphViewSeries;
 import com.jjoe64.graphview.GraphViewStyle;
 import com.jjoe64.graphview.LineGraphView;
+import com.jjoe64.graphview.CustomLabelFormatter;
 
 import java.util.UUID;
 
@@ -33,19 +34,20 @@ public class MainBasic extends Activity {
         TextView text = (TextView) findViewById(R.id.output);
         text.setText("");
 
-        // todo: make a legitimate title
-
-
-        func_series = new GraphViewSeries(new GraphViewData[] {});
-        data_series = new GraphViewSeries(new GraphViewData[] {});
-        data_series.getStyle().color = Color.BLUE;
         times_read = 0;
+
+        predict_series = new GraphViewSeries(new GraphViewData[] {});
+        data_series = new GraphViewSeries(new GraphViewData[] {});
+        goal_series = new GraphViewSeries(new GraphViewData[] {});
+        goal_series.getStyle().color = Color.RED;
+        data_series.getStyle().color = Color.BLUE;
+
 
         // set up the graph
         graph = new LineGraphView(this, "");
         ((LineGraphView) graph).setDrawBackground(true);
 
-        //graph.addSeries(func_series);
+        graph.addSeries(goal_series);
         graph.addSeries(data_series);
 
         graph.setViewPort(1, 100);
@@ -54,15 +56,15 @@ public class MainBasic extends Activity {
         graph.getGraphViewStyle().setNumVerticalLabels(4);
         graph.getGraphViewStyle().setVerticalLabelsWidth(100);
 
-
         graph.getGraphViewStyle().setNumHorizontalLabels(5);
-        graph.getGraphViewStyle().setGridStyle(GraphViewStyle.GridStyle.BOTH);
+        graph.getGraphViewStyle().setGridStyle(GraphViewStyle.GridStyle.VERTICAL);
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.graph);
         layout.addView(graph);
     }
-    private GraphViewSeries func_series;
+    private GraphViewSeries predict_series;
     private GraphViewSeries data_series;
+    private GraphViewSeries goal_series;
     private GraphView graph;
     private int times_read;
 
@@ -82,9 +84,6 @@ public class MainBasic extends Activity {
             }
         }
     };
-    public static double roundToTwoPlaces(double d) {
-        return ((long) (d < 0 ? d * 100 - 0.5 : d * 100 + 0.5)) / 100.0;
-    }
     // handler for the graph
     public Handler graph_handler = new Handler(){
         @Override
@@ -97,7 +96,8 @@ public class MainBasic extends Activity {
                 else if(m_msg.state == TemperatureProcessor.decreasing){
 
                 }
-                data_series.appendData(new GraphViewData(times_read, (double)Math.round(m_msg.temp * 10.0) / 10.0 ), true, 100);
+                data_series.appendData(new GraphViewData((double)times_read * 0.5, (double)Math.round(m_msg.temp * 10.0) / 10.0 ), true, 100);
+                goal_series.appendData(new GraphViewData((double)times_read * 0.5, 136), true, 100);
                 times_read++;
             }
             else if(msg.what == -1){
