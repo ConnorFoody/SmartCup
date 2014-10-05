@@ -1,7 +1,6 @@
 package com.example.connorfoody.smartcup;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,9 +9,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.LinearLayout;
-import android.app.Notification.*;
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
@@ -24,7 +20,6 @@ import com.jjoe64.graphview.LineGraphView;
 import java.util.UUID;
 
 public class MainBasic extends Activity {
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +33,9 @@ public class MainBasic extends Activity {
         TextView text = (TextView) findViewById(R.id.output);
         text.setText("");
 
-        times_read = 0;
+        times_read = 0; // how many times we process a message, should be incremented at 2 Hz
 
+        // used graphview for graphing
         data_series = new GraphViewSeries(new GraphViewData[] {});
         goal_series = new GraphViewSeries(new GraphViewData[] {});
         goal_series.getStyle().color = Color.GREEN;
@@ -53,8 +49,9 @@ public class MainBasic extends Activity {
         graph.addSeries(goal_series);
         graph.addSeries(data_series);
 
-        graph.setViewPort(1, 100);
-        graph.setScalable(true);
+        graph.setViewPort(1, 100); // view port is effectively our window onto the graph
+        graph.setScalable(true); // setting needed for the graph to be dynamic
+
 
         graph.getGraphViewStyle().setNumVerticalLabels(4);
         graph.getGraphViewStyle().setVerticalLabelsWidth(100);
@@ -71,6 +68,7 @@ public class MainBasic extends Activity {
     private GraphViewSeries goal_series;
     private GraphView graph;
     private int times_read;
+
     // simple handler to help with debugging
     public Handler debug_handler = new Handler(){
         @Override
@@ -87,21 +85,27 @@ public class MainBasic extends Activity {
             }
         }
     };
+
     // handler for the graph
     public Handler graph_handler = new Handler(){
         @Override
         public void handleMessage(Message msg){
-            if(msg.what == 1){
+            if(msg.what == 1){ // our message OK code
                 SCMessage m_msg = (SCMessage)msg.obj;
+                // every 30 seconds or (below good temp and not too close to start)
                 if(times_read%60 == 0 || (m_msg.temp < 137 && times_read > 10)){
                     if(m_msg.predict != 0) {
-                        Toast.makeText(getApplicationContext(), "" + Math.round(m_msg.predict / 60) + ":" + Math.round(m_msg.predict % 60) + " until ideal temperature", Toast.LENGTH_LONG).show();
+                        // make a notification appear at the bottom to tell us how long until our drink is ready
+                        Toast.makeText(getApplicationContext(), "" + Math.round(m_msg.predict / 60) + ":" +
+                                Math.round(m_msg.predict % 60) + " until ideal temperature", Toast.LENGTH_LONG).show();
                     }else{
+                        // notification for drink being ready
                         Toast.makeText(getApplicationContext(), "drink is at safe temperature", Toast.LENGTH_LONG).show();
                     }
                 }
+                // add to graph, (x,y), scroll to end, buffer
                 data_series.appendData(new GraphViewData((double)times_read , (double)Math.round(m_msg.temp * 10.0) / 10.0 ), true, 200);
-                goal_series.appendData(new GraphViewData((double)times_read , 136), true, 200);
+                goal_series.appendData(new GraphViewData((double)times_read , 136), true, 200); // 136 is our goal "optimal drinking temp"
 
                 times_read++;
             }
@@ -112,6 +116,7 @@ public class MainBasic extends Activity {
                 System.out.println("ERROR: " + msg.obj);
             }
             else{
+                // super messages that are not ours
                 super.handleMessage(msg);
             }
         }

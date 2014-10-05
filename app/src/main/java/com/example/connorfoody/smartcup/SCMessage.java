@@ -3,6 +3,7 @@ package com.example.connorfoody.smartcup;
 /**
  * Created by connorfoody on 10/5/14.
  */
+// simple POD class to make moving data from bluetooth to UI thread easier
 public class SCMessage {
     public int state; // state from the temp manager
     public double temp; // temp from the sensor

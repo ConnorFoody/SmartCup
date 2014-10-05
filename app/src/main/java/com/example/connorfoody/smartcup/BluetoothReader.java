@@ -10,7 +10,7 @@ import java.io.InputStream;
 import java.util.UUID;
 
 /**
- * Created by connorfoody on 10/3/14.
+ * Created by connorfoody on 10/5/14.
  */
 public class BluetoothReader extends Thread {
 
@@ -33,16 +33,13 @@ public class BluetoothReader extends Thread {
 
     public void run(){
         Message msg = null;
-        if(m_adapter == null){
-            // need to throw some kind of error for this
-        }
-        //test();
-        check_state();
+
+        check_state(); // check bluetooth
         if(!bt_OK){ // if bluetooth is not enabled, go ahead and break
             return;
         }
 
-        // pointer to remote node
+        // points to cup
         BluetoothDevice device = m_adapter.getRemoteDevice(m_address);
 
         // make the connection
@@ -55,7 +52,7 @@ public class BluetoothReader extends Thread {
             m_handler.sendMessage(msg);
         }
 
-        // b/c its power intensive to have discovery on
+        // turn off discovery so we don't waste power
         m_adapter.cancelDiscovery();
 
         // establish connection
@@ -90,24 +87,22 @@ public class BluetoothReader extends Thread {
         System.out.println("ENTERING");
         while(true){
             try{
+                // if too few packets available, don't read
                 if(bt_is.available() <= 2){
                     continue;
                 }
                 count++;
                 byte[] buffer = new byte[4];
                 bytes = bt_is.read(buffer);
+                // have to convert it because text from arduino end is encoded differently
+                // write should not be null terminated on arduino side, only Serial.print()
                 o_str += new String(buffer, "US-ASCII");
 
-                if(o_str.contains("!") == true){
+                if(o_str.contains("!") == true){ // use ! as delimiter
                     raw = o_str;
+                    // clean up and convert string
                     o_str = o_str.replace("!", " ");
                     o_str.trim();
-
-                    for(int i = 0; i < 4; i++){
-                        //System.out.print("" + o_str.charAt(i) + " ");
-                    }
-                    //System.out.println();
-                    //System.out.println("temperature" + o_str);
                     double temp = Double.valueOf(o_str);
 
                     int state = m_processor.Update(temp);
@@ -187,6 +182,7 @@ public class BluetoothReader extends Thread {
             }
         }
     }
+    // quick test to make sure the thread works
     private void test(){
         for(int i = 0; i < 4; i++){
             Message msg = m_handler.obtainMessage(1, "" + i);
